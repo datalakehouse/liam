@@ -1,0 +1,39 @@
+.compactItem {
+  cursor: pointer;
+  padding: 6px 12px;
+}
+
+.compactItem:hover {
+  background-color: var(--pane-background-hover);
+}
+
+.compactRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--erd-details-pane-text-size, 13px);
+  line-height: 1.4;
+}
+
+.columnName {
+  font-weight: 500;
+  color: var(--global-foreground);
+}
+
+.columnType {
+  color: var(--global-mute-text);
+}
+
+.primaryKeyIcon {
+  width: 14px;
+  height: 14px;
+  color: var(--erd-primary-key-icon, var(--primary-accent));
+  flex-shrink: 0;
+}
+
+.notNullIcon {
+  width: 12px;
+  height: 12px;
+  color: var(--erd-not-null-icon, var(--global-mute-text));
+  flex-shrink: 0;
+}

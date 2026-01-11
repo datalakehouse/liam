@@ -1,3 +1,24 @@
 :root {
   --default-header-height: var(--layout-app-bar-height);
+
+  /* ERD Theme CSS Custom Properties - Override these to customize the ERD appearance */
+  /* Colors */
+  --erd-primary-color: var(--primary-accent, #1ded83);
+  --erd-primary-hover: var(--primary-hover, #4af19c);
+  --erd-relationship-line: var(--node-layout, #1ded83);
+  --erd-relationship-line-highlight: var(--node-layout, #1ded83);
+  --erd-primary-key-icon: var(--primary-accent, #1ded83);
+  --erd-not-null-icon: var(--global-mute-text, #bebfc1);
+  --erd-table-background: var(--node-background, #141616);
+  --erd-table-border: var(--node-border, #5f6366);
+  --erd-table-header-background: var(--node-accent-background, #232526);
+  --erd-sidebar-background: var(--pane-background, #232526);
+  --erd-sidebar-text: var(--global-body-text, #d1d2d3);
+  --erd-details-pane-background: var(--pane-background, #232526);
+
+  /* Typography */
+  --erd-sidebar-table-name-size: 13px;
+  --erd-sidebar-column-name-size: 12px;
+  --erd-details-pane-heading-size: 14px;
+  --erd-details-pane-text-size: 13px;
 }

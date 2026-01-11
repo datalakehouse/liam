@@ -17,6 +17,10 @@
   background-color: var(--pane-background-hover);
 }
 
+.wrapper.clickable {
+  cursor: pointer;
+}
+
 .wrapper.highlightRelatedColumn {
   background-color: var(--primary-overlay-10);
   transition: background-color var(--default-hover-animation-duration)

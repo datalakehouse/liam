@@ -13,18 +13,35 @@ import {
   TooltipTrigger,
 } from '@liam-hq/ui'
 import type { Ref } from 'react'
+import type { HelpMenuItem } from '../types'
 import styles from './HelpButton.module.css'
 import { ReleaseVersion } from './ReleaseVersion'
 
 type Props = {
   ref?: Ref<HTMLButtonElement>
+  items?: HelpMenuItem[]
 }
 
 const handleSelect = (url: string) => () => {
   window.open(url, '_blank', 'noreferrer')
 }
 
-export const HelpButton = ({ ref }: Props) => {
+const defaultItems: HelpMenuItem[] = [
+  {
+    label: 'Documentation',
+    url: 'https://liambx.com/docs',
+    icon: <BookText />,
+  },
+  {
+    label: 'Community Forum',
+    url: 'https://github.com/liam-hq/liam/discussions',
+    icon: <MessagesSquare />,
+  },
+]
+
+export const HelpButton = ({ ref, items }: Props) => {
+  const menuItems = items ?? defaultItems
+
   return (
     <DropdownMenuRoot>
       <TooltipProvider>
@@ -47,22 +64,16 @@ export const HelpButton = ({ ref }: Props) => {
           className={styles.menuContent}
         >
           <ReleaseVersion />
-          <DropdownMenuItem
-            size="sm"
-            leftIcon={<BookText />}
-            onSelect={handleSelect('https://liambx.com/docs')}
-          >
-            Documentation
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            size="sm"
-            leftIcon={<MessagesSquare />}
-            onSelect={handleSelect(
-              'https://github.com/liam-hq/liam/discussions',
-            )}
-          >
-            Community Forum
-          </DropdownMenuItem>
+          {menuItems.map((item) => (
+            <DropdownMenuItem
+              key={item.url}
+              size="sm"
+              leftIcon={item.icon}
+              onSelect={handleSelect(item.url)}
+            >
+              {item.label}
+            </DropdownMenuItem>
+          ))}
         </DropdownMenuContent>
       </DropdownMenuPortal>
     </DropdownMenuRoot>

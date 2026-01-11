@@ -18,7 +18,7 @@ import {
   useMemo,
   useState,
 } from 'react'
-import { AppBar } from './AppBar'
+import { AppBar, type AppBarConfig } from './AppBar'
 import styles from './ERDRenderer.module.css'
 import '../../../../styles/globals.css'
 import { useIsTouchDevice } from '../../../../hooks'
@@ -45,7 +45,9 @@ type Props = {
   errorObjects?: ComponentProps<typeof ErrorDisplay>['errors']
   defaultPanelSizes?: number[]
   withAppBar?: boolean
+  appBarConfig?: AppBarConfig
   customToolbarActions?: ReactNode
+  showMinimap?: boolean
 }
 
 const SIDEBAR_COOKIE_NAME = 'sidebar:state'
@@ -57,7 +59,9 @@ export const ERDRenderer: FC<Props> = ({
   errorObjects = [],
   defaultPanelSizes = [20, 80],
   withAppBar = false,
+  appBarConfig,
   customToolbarActions,
+  showMinimap = false,
 }) => {
   const [open, setOpen] = useState(defaultSidebarOpen)
   const [isResizing, setIsResizing] = useState(false)
@@ -126,7 +130,9 @@ export const ERDRenderer: FC<Props> = ({
       <RelationshipEdgeParticleMarker />
       <ToastProvider>
         <CommandPaletteProvider>
-          {withAppBar && <AppBar />}
+          {withAppBar && (
+            <AppBar {...(appBarConfig ? { config: appBarConfig } : {})} />
+          )}
           <ReactFlowProvider>
             <ResizablePanelGroup
               direction="horizontal"
@@ -172,6 +178,7 @@ export const ERDRenderer: FC<Props> = ({
                           nodes={nodes}
                           edges={edges}
                           displayArea="main"
+                          showMinimap={showMinimap}
                         />
                         <TableDetailDrawer />
                       </>

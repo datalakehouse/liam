@@ -9,13 +9,19 @@ import {
 import type { FC } from 'react'
 import styles from './GithubButton.module.css'
 
-export const GithubButton: FC = () => {
+type Props = {
+  url?: string
+}
+
+export const GithubButton: FC<Props> = ({
+  url = 'https://github.com/liam-hq/liam',
+}) => {
   return (
     <TooltipProvider>
       <TooltipRoot>
         <TooltipTrigger asChild>
           <a
-            href="https://github.com/liam-hq/liam"
+            href={url}
             target="_blank"
             rel="noreferrer"
             className={styles.iconWrapper}

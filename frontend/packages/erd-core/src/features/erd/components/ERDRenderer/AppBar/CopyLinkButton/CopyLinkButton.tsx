@@ -11,7 +11,11 @@ import { type FC, useCallback } from 'react'
 import { useVersionOrThrow } from '../../../../../../providers'
 import { clickLogEvent } from '../../../../../gtm/utils'
 
-export const CopyLinkButton: FC = () => {
+type Props = {
+  value?: string
+}
+
+export const CopyLinkButton: FC<Props> = ({ value }) => {
   const { version } = useVersionOrThrow()
   const { copy } = useCopy({
     toast: {
@@ -21,7 +25,7 @@ export const CopyLinkButton: FC = () => {
   })
 
   const handleCopyUrl = useCallback(() => {
-    copy(window.location.href)
+    copy(value ?? window.location.href)
 
     clickLogEvent({
       element: 'copyLinkButton',
@@ -30,7 +34,7 @@ export const CopyLinkButton: FC = () => {
       gitHash: version.gitHash,
       appEnv: version.envName,
     })
-  }, [copy, version])
+  }, [copy, version, value])
 
   return (
     <TooltipProvider>
