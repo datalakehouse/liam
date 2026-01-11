@@ -39,6 +39,7 @@ export {
   type MigrationOperation,
   migrationOperationsSchema,
 } from './migrationOperation/index.js'
+export { processor as parseTbls } from './parser/tbls/index.js'
 export type { ProcessError } from './parser.js'
 export {
   aColumn,
