@@ -21,6 +21,7 @@ const extensionToFormatMap: Record<string, SupportedFormat> = {
   ts: 'drizzle',
   js: 'drizzle',
   json: 'tbls',
+  dbml: 'dbml',
 }
 
 export const detectFormat = (
