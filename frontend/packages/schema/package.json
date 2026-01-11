@@ -15,6 +15,7 @@
     "./parser": "./dist/parser.js"
   },
   "dependencies": {
+    "@dbml/core": "5.3.1",
     "@prisma/internals": "6.8.2",
     "@ruby/prism": "1.5.2",
     "@swc/core": "1.12.11",
