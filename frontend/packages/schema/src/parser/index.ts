@@ -38,5 +38,9 @@ export const parse = async (
       const { processor } = await import('./liam/index.js')
       return processor(str)
     }
+    case 'dbml': {
+      const { processor } = await import('./dbml/index.js')
+      return processor(str)
+    }
   }
 }
