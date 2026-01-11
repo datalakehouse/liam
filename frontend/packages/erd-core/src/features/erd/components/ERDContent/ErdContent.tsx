@@ -12,7 +12,7 @@ import {
 } from '@xyflow/react'
 import { type FC, useCallback } from 'react'
 import { useVersionOrThrow } from '../../../../providers'
-import { useUserEditingOrThrow } from '../../../../stores'
+import { useColorMode, useUserEditingOrThrow } from '../../../../stores'
 import { selectTableLogEvent } from '../../../gtm/utils'
 import { repositionTableLogEvent } from '../../../gtm/utils/repositionTableLogEvent'
 import { MAX_ZOOM, MIN_ZOOM } from '../../../reactflow/constants'
@@ -66,6 +66,7 @@ export const ERDContentInner: FC<Props> = ({
     state: { loading },
   } = useErdContentContext()
   const { activeTableName } = useUserEditingOrThrow()
+  const colorMode = useColorMode()
 
   const { selectTable, deselectTable } = useTableSelection()
 
@@ -153,7 +154,7 @@ export const ERDContentInner: FC<Props> = ({
     <div className={styles.wrapper} data-loading={loading}>
       {loading && <Spinner className={styles.loading} />}
       <ReactFlow
-        colorMode="dark"
+        colorMode={colorMode}
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
