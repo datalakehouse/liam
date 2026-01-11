@@ -15,7 +15,7 @@ import {
 import type { Ref } from 'react'
 import type { HelpMenuItem } from '../types'
 import styles from './HelpButton.module.css'
-import { ReleaseVersion } from './ReleaseVersion'
+// import { ReleaseVersion } from './ReleaseVersion'
 
 type Props = {
   ref?: Ref<HTMLButtonElement>
@@ -63,7 +63,7 @@ export const HelpButton = ({ ref, items }: Props) => {
           sideOffset={4}
           className={styles.menuContent}
         >
-          <ReleaseVersion />
+          {/* <ReleaseVersion /> */}
           {menuItems.map((item) => (
             <DropdownMenuItem
               key={item.url}

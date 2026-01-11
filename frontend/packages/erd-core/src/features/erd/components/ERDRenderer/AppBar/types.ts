@@ -12,6 +12,8 @@ export type AppBarConfig = {
     text?: string
     showText?: boolean
     url?: string
+    imgUrl?: string
+    imgHeight?: string
   }
   search?: {
     show?: boolean
