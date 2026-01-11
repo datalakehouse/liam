@@ -1,4 +1,3 @@
-import { fromPromise } from '@liam-hq/neverthrow'
 import { postgresqlSchemaDeparser, yamlSchemaDeparser } from '@liam-hq/schema'
 import {
   Button,
@@ -13,6 +12,7 @@ import {
 } from '@liam-hq/ui'
 import type { FC } from 'react'
 import { useSchemaOrThrow } from '../../../../../../stores'
+import { fromPromise } from '../../../../../../utils/neverthrow'
 
 export const ExportDropdown: FC = () => {
   const toast = useToast()
