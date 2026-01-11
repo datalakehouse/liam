@@ -2,6 +2,7 @@ import {
   Background,
   BackgroundVariant,
   type Edge,
+  MiniMap,
   type Node,
   type NodeMouseHandler,
   type OnNodeDrag,
@@ -41,12 +42,14 @@ type Props = {
   nodes: Node[]
   edges: Edge[]
   displayArea: DisplayArea
+  showMinimap?: boolean
 }
 
 export const ERDContentInner: FC<Props> = ({
   nodes: _nodes,
   edges: _edges,
   displayArea,
+  showMinimap = false,
 }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>(
     displayArea === 'relatedTables'
@@ -178,6 +181,19 @@ export const ERDContentInner: FC<Props> = ({
           size={1}
           gap={16}
         />
+        {showMinimap && (
+          <MiniMap
+            nodeColor="var(--erd-table-background, var(--node-background))"
+            maskColor="rgba(0, 0, 0, 0.6)"
+            style={{
+              backgroundColor: 'var(--pane-background)',
+              border: '1px solid var(--node-border)',
+              borderRadius: 'var(--border-radius-md)',
+            }}
+            zoomable
+            pannable
+          />
+        )}
       </ReactFlow>
     </div>
   )

@@ -19,10 +19,14 @@ export const RelationshipEdgeParticleMarker: FC = () => {
           fx="50%"
           fy="50%"
         >
-          <stop offset="0%" stopColor="var(--node-layout)" stopOpacity="1" />
+          <stop
+            offset="0%"
+            stopColor="var(--erd-relationship-line-highlight, var(--node-layout))"
+            stopOpacity="1"
+          />
           <stop
             offset="100%"
-            stopColor="var(--node-layout)"
+            stopColor="var(--erd-relationship-line-highlight, var(--node-layout))"
             stopOpacity="0.4"
           />
         </radialGradient>

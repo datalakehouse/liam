@@ -9,13 +9,19 @@ import {
 import type { FC } from 'react'
 import styles from './ReleaseNoteButton.module.css'
 
-export const ReleaseNoteButton: FC = () => {
+type Props = {
+  url?: string
+}
+
+export const ReleaseNoteButton: FC<Props> = ({
+  url = 'https://github.com/liam-hq/liam/releases',
+}) => {
   return (
     <TooltipProvider>
       <TooltipRoot>
         <TooltipTrigger asChild>
           <a
-            href="https://github.com/liam-hq/liam/releases"
+            href={url}
             target="_blank"
             rel="noreferrer"
             className={styles.iconWrapper}
@@ -24,7 +30,7 @@ export const ReleaseNoteButton: FC = () => {
           </a>
         </TooltipTrigger>
         <TooltipPortal>
-          <TooltipContent sideOffset={4}>Release Notes</TooltipContent>
+          <TooltipContent sideOffset={4}>Announcements</TooltipContent>
         </TooltipPortal>
       </TooltipRoot>
     </TooltipProvider>

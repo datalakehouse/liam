@@ -7,7 +7,7 @@ import {
 import { DiamondFillIcon, DiamondIcon, KeyRound, Link } from '@liam-hq/ui'
 import { Handle, Position } from '@xyflow/react'
 import clsx from 'clsx'
-import { type FC, useMemo } from 'react'
+import { type FC, useCallback, useMemo } from 'react'
 import { match } from 'ts-pattern'
 import {
   useSchemaOrThrow,
@@ -15,6 +15,7 @@ import {
 } from '../../../../../../../../stores'
 import { DiffIcon } from '../../../../../../../diff/components/DiffIcon'
 import diffStyles from '../../../../../../../diff/styles/Diff.module.css'
+import { getTableColumnElementId } from '../../../../../../utils/url/getTableColumnElementId'
 import { getChangeStatus } from './getChangeStatus'
 import styles from './TableColumn.module.css'
 
@@ -97,8 +98,27 @@ export const TableColumn: FC<TableColumnProps> = ({
   targetCardinality,
   isHighlightedTable,
 }) => {
-  const { showDiff } = useUserEditingOrThrow()
+  const { showDiff, setActiveTableName } = useUserEditingOrThrow()
   const { operations } = useSchemaOrThrow()
+
+  const handleColumnClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      setActiveTableName(table.name)
+      const elementId = getTableColumnElementId(table.name, column.name)
+
+      // Set the URL hash to focus on the element (this triggers focusedElementId update via hashchange event)
+      window.location.hash = elementId
+
+      setTimeout(() => {
+        const element = document.getElementById(elementId)
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
+      }, 100)
+    },
+    [table.name, column.name, setActiveTableName],
+  )
 
   // Only calculate diff-related values when showDiff is true
   const changeStatus = useMemo(() => {
@@ -128,7 +148,23 @@ export const TableColumn: FC<TableColumnProps> = ({
         styles.wrapper,
         showDiff && styles.wrapperWithDiff,
         shouldHighlight && styles.highlightRelatedColumn,
+        styles.clickable,
       )}
+      onClick={handleColumnClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.stopPropagation()
+          setActiveTableName(table.name)
+          const elementId = getTableColumnElementId(table.name, column.name)
+          window.location.hash = elementId
+          setTimeout(() => {
+            const element = document.getElementById(elementId)
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            }
+          }, 100)
+        }
+      }}
     >
       {showDiff && changeStatus && (
         <div className={clsx(styles.diffBox, diffStyle)}>
