@@ -27,6 +27,8 @@ export const AppBar: FC<Props> = ({ config }) => {
   }
 
   const logoUrl = config?.logo?.url ?? 'https://liambx.com'
+  const logoImgUrl = config?.logo?.imgUrl ?? ''
+  const logoImgHeight = config?.logo?.imgHeight ?? ''
   const logoText = config?.logo?.text ?? 'Liam ERD'
   const showLogoText = config?.logo?.showText !== false
   const showSearch = config?.search?.show !== false
@@ -56,13 +58,15 @@ export const AppBar: FC<Props> = ({ config }) => {
                 rel="noreferrer"
                 className={styles.iconWrapper}
               >
-                {config?.logo?.element ?? (
+                {config?.logo?.imgUrl ? (
+                  <img src={logoImgUrl} alt="logo" height={logoImgHeight} />
+                ) : (
                   <LiamLogoMark className={styles.logo} />
                 )}
               </a>
             </TooltipTrigger>
             <TooltipPortal>
-              <TooltipContent sideOffset={4}>Go to Home page</TooltipContent>
+              <TooltipContent sideOffset={4}>Home</TooltipContent>
             </TooltipPortal>
           </TooltipRoot>
         </TooltipProvider>

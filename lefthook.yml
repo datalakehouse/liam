@@ -1,5 +1,7 @@
 pre-commit:
   parallel: true
+  only:
+    - ref: dev/*
   commands:
     lint:
       glob: "*.{js,jsx,ts,tsx,json,md,mdx,yml,yaml}"
