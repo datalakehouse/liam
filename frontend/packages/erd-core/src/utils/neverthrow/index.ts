@@ -1,0 +1,1 @@
+export { fromPromise } from './fromPromise'

@@ -15,7 +15,6 @@
     "./parser": "./dist/parser.js"
   },
   "dependencies": {
-    "@liam-hq/neverthrow": "workspace:*",
     "@prisma/internals": "6.8.2",
     "@ruby/prism": "1.5.2",
     "@swc/core": "1.12.11",

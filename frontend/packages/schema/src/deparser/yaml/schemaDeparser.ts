@@ -1,6 +1,6 @@
-import { fromThrowable } from '@liam-hq/neverthrow'
 import yaml from 'yaml'
 import type { Schema } from '../../schema/index.js'
+import { fromThrowable } from '../../utils/neverthrow/index.js'
 import type { SchemaDeparser } from '../type.js'
 
 const removeNullValues = (obj: unknown): unknown => {
