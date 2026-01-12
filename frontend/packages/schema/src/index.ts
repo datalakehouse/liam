@@ -40,12 +40,12 @@ export {
   migrationOperationsSchema,
 } from './migrationOperation/index.js'
 export { processor as parseTbls } from './parser/tbls/index.js'
+// Note: parse and setPrismWasmUrl are server-only functions that use Node.js modules.
+// Import them from '@liam-hq/schema/parser' instead for server-side usage.
 export {
   detectFormat,
   type ProcessError,
-  parse,
   type SupportedFormat,
-  setPrismWasmUrl,
   supportedFormatSchema,
 } from './parser.js'
 export {
