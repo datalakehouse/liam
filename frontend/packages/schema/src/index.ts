@@ -40,7 +40,14 @@ export {
   migrationOperationsSchema,
 } from './migrationOperation/index.js'
 export { processor as parseTbls } from './parser/tbls/index.js'
-export type { ProcessError } from './parser.js'
+export {
+  detectFormat,
+  type ProcessError,
+  parse,
+  type SupportedFormat,
+  setPrismWasmUrl,
+  supportedFormatSchema,
+} from './parser.js'
 export {
   aColumn,
   aForeignKeyConstraint,
