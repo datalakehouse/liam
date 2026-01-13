@@ -2,7 +2,7 @@
  * Enum definition parsing for Drizzle ORM schema parsing
  */
 
-import type { CallExpression } from '@swc/core'
+import type { CallExpression } from '@babel/types'
 import {
   getArgumentExpression,
   getStringValue,
@@ -23,7 +23,7 @@ export const parsePgEnumCall = (
 
   if (!enumNameArg || !valuesArg) return null
 
-  // Extract expression from SWC argument structure
+  // Extract expression from Babel argument structure
   const enumNameExpr = getArgumentExpression(enumNameArg)
   const valuesExpr = getArgumentExpression(valuesArg)
 
@@ -32,9 +32,8 @@ export const parsePgEnumCall = (
 
   const values: string[] = []
   for (const element of valuesExpr.elements) {
-    if (!element) continue
-    const expr = 'expression' in element ? element.expression : element
-    const str = getStringValue(expr)
+    if (!element || element.type === 'SpreadElement') continue
+    const str = getStringValue(element)
     if (typeof str === 'string') values.push(str)
   }
 

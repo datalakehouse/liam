@@ -2,7 +2,7 @@
  * Table structure parsing for Drizzle ORM MySQL schema parsing
  */
 
-import type { CallExpression, Expression, ObjectExpression } from '@swc/core'
+import type { CallExpression, Expression, ObjectExpression } from '@babel/types'
 import type { Constraint } from '../../../schema/index.js'
 import {
   getArgumentExpression,
@@ -35,7 +35,7 @@ const parseTableColumns = (
   const columns: Record<string, DrizzleColumnDefinition> = {}
 
   for (const prop of columnsExpr.properties) {
-    if (prop.type === 'KeyValueProperty') {
+    if (prop.type === 'ObjectProperty') {
       const column = parseColumnFromProperty(prop, extractedEnums)
       if (column) {
         // Use the JS property name as the key
@@ -76,13 +76,13 @@ const parseTableExtensions = (
     let returnExpr = thirdArgExpr.body
 
     // Handle parenthesized expressions like (table) => ({ ... })
-    if (returnExpr.type === 'ParenthesisExpression') {
+    if (returnExpr.type === 'ParenthesizedExpression') {
       returnExpr = returnExpr.expression
     }
 
     if (returnExpr.type === 'ObjectExpression') {
       for (const prop of returnExpr.properties) {
-        if (prop.type === 'KeyValueProperty') {
+        if (prop.type === 'ObjectProperty') {
           const indexName =
             prop.key.type === 'Identifier' ? getIdentifierName(prop.key) : null
           if (indexName && prop.value.type === 'CallExpression') {
@@ -178,7 +178,7 @@ export const parseMysqlTableCall = (
 
   if (!tableNameArg || !columnsArg) return null
 
-  // Extract expression from SWC argument structure
+  // Extract expression from Babel argument structure
   const tableNameExpr = getArgumentExpression(tableNameArg)
   const columnsExpr = getArgumentExpression(columnsArg)
 
@@ -223,7 +223,7 @@ export const parseSchemaTableCall = (
 ): DrizzleTableDefinition | null => {
   if (!isSchemaTableCall(callExpr) || callExpr.arguments.length < 2) return null
 
-  // Extract expression from SWC argument structure
+  // Extract expression from Babel argument structure
   const tableNameExpr = getArgumentExpression(callExpr.arguments[0])
   const columnsExpr = getArgumentExpression(callExpr.arguments[1])
 
@@ -237,7 +237,7 @@ export const parseSchemaTableCall = (
     callExpr.callee.type === 'MemberExpression' &&
     callExpr.callee.object.type === 'Identifier'
   ) {
-    schemaName = callExpr.callee.object.value
+    schemaName = callExpr.callee.object.name
   }
 
   const table: DrizzleTableDefinition = {
@@ -283,7 +283,7 @@ const parseIndexDefinition = (
   // Handle primaryKey({ columns: [...] })
   if (
     callExpr.callee.type === 'Identifier' &&
-    callExpr.callee.value === 'primaryKey'
+    callExpr.callee.name === 'primaryKey'
   ) {
     if (callExpr.arguments.length > 0) {
       const configArg = callExpr.arguments[0]
@@ -318,7 +318,7 @@ const parseIndexDefinition = (
     currentExpr.callee.type === 'MemberExpression' &&
     currentExpr.callee.property.type === 'Identifier'
   ) {
-    const methodName = currentExpr.callee.property.value
+    const methodName = currentExpr.callee.property.name
     methodCalls.unshift({ method: methodName, expr: currentExpr })
     currentExpr = currentExpr.callee.object
   }
@@ -328,7 +328,7 @@ const parseIndexDefinition = (
     currentExpr.type === 'CallExpression' &&
     currentExpr.callee.type === 'Identifier'
   ) {
-    const baseMethod = currentExpr.callee.value
+    const baseMethod = currentExpr.callee.name
     if (baseMethod === 'index' || baseMethod === 'uniqueIndex') {
       isUnique = baseMethod === 'uniqueIndex'
       // Get the index name from the first argument
@@ -356,7 +356,7 @@ const parseIndexDefinition = (
           argExpr.object.type === 'Identifier' &&
           argExpr.property.type === 'Identifier'
         ) {
-          columns.push(argExpr.property.value)
+          columns.push(argExpr.property.name)
         }
       }
     } else if (method === 'using') {
@@ -394,7 +394,7 @@ const parseCheckConstraint = (
   // Handle check('constraint_name', sql`condition`)
   if (
     callExpr.callee.type === 'Identifier' &&
-    callExpr.callee.value === 'check'
+    callExpr.callee.name === 'check'
   ) {
     // Extract the constraint name from the first argument
     let constraintName = name
@@ -417,27 +417,17 @@ const parseCheckConstraint = (
         if (
           conditionExpr.type === 'TaggedTemplateExpression' &&
           conditionExpr.tag.type === 'Identifier' &&
-          conditionExpr.tag.value === 'sql'
+          conditionExpr.tag.name === 'sql'
         ) {
           // Extract the condition from template literal
-          if (
-            conditionExpr.template.type === 'TemplateLiteral' &&
-            conditionExpr.template.quasis.length > 0
-          ) {
-            const firstQuasi = conditionExpr.template.quasis[0]
+          if (conditionExpr.quasi.quasis.length > 0) {
+            const firstQuasi = conditionExpr.quasi.quasis[0]
             if (firstQuasi && firstQuasi.type === 'TemplateElement') {
-              // SWC TemplateElement has different structure than TypeScript's
-              // We need to access the raw string from the SWC AST structure
-              // Use property access with type checking to avoid type assertions
-              const hasRaw =
-                'raw' in firstQuasi && typeof firstQuasi.raw === 'string'
-              const hasCooked =
-                'cooked' in firstQuasi && typeof firstQuasi.cooked === 'string'
-
-              if (hasRaw) {
-                condition = firstQuasi.raw || ''
-              } else if (hasCooked) {
-                condition = firstQuasi.cooked || ''
+              // Babel TemplateElement has value.raw and value.cooked
+              if (firstQuasi.value.raw) {
+                condition = firstQuasi.value.raw
+              } else if (firstQuasi.value.cooked) {
+                condition = firstQuasi.value.cooked
               }
             }
           }
@@ -446,7 +436,7 @@ const parseCheckConstraint = (
         else if (
           conditionExpr.type === 'CallExpression' &&
           conditionExpr.callee.type === 'Identifier' &&
-          conditionExpr.callee.value === 'sql' &&
+          conditionExpr.callee.name === 'sql' &&
           conditionExpr.arguments.length > 0
         ) {
           const sqlArg = getArgumentExpression(conditionExpr.arguments[0])
@@ -490,7 +480,7 @@ const parseUniqueConstraint = (
     currentExpr.callee.type === 'MemberExpression' &&
     currentExpr.callee.property.type === 'Identifier'
   ) {
-    const methodName = currentExpr.callee.property.value
+    const methodName = currentExpr.callee.property.name
     methodCalls.unshift({ method: methodName, expr: currentExpr })
     currentExpr = currentExpr.callee.object
   }
@@ -499,7 +489,7 @@ const parseUniqueConstraint = (
   if (
     currentExpr.type === 'CallExpression' &&
     currentExpr.callee.type === 'Identifier' &&
-    currentExpr.callee.value === 'unique'
+    currentExpr.callee.name === 'unique'
   ) {
     // Get the constraint name from the first argument
     if (currentExpr.arguments.length > 0) {
@@ -523,7 +513,7 @@ const parseUniqueConstraint = (
             argExpr.property.type === 'Identifier'
           ) {
             // Get the JavaScript property name
-            const jsPropertyName = argExpr.property.value
+            const jsPropertyName = argExpr.property.name
             // Find the actual database column name from the table columns
             const column = tableColumns[jsPropertyName]
             if (column) {

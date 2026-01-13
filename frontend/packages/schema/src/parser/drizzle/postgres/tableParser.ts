@@ -2,7 +2,7 @@
  * Table structure parsing for Drizzle ORM schema parsing
  */
 
-import type { CallExpression, Expression } from '@swc/core'
+import type { CallExpression, Expression } from '@babel/types'
 import {
   extractPgTableFromChain,
   getArgumentExpression,
@@ -70,7 +70,7 @@ export const parsePgTableCall = (
 
   if (!tableNameArg || !columnsArg) return null
 
-  // Extract expression from SWC argument structure
+  // Extract expression from Babel argument structure
   const tableNameExpr = getArgumentExpression(tableNameArg)
   const columnsExpr = getArgumentExpression(columnsArg)
 
@@ -86,7 +86,7 @@ export const parsePgTableCall = (
 
   // Parse columns from the object expression
   for (const prop of columnsExpr.properties) {
-    if (prop.type === 'KeyValueProperty') {
+    if (prop.type === 'ObjectProperty') {
       const column = parseColumnFromProperty(prop)
       if (column) {
         // Use the JS property name as the key
@@ -108,13 +108,14 @@ export const parsePgTableCall = (
       let returnExpr = thirdArgExpr.body
 
       // Handle parenthesized expressions like (table) => ({ ... })
-      if (returnExpr.type === 'ParenthesisExpression') {
+      // Note: Babel uses 'ParenthesizedExpression' instead of SWC's 'ParenthesisExpression'
+      if (returnExpr.type === 'ParenthesizedExpression') {
         returnExpr = returnExpr.expression
       }
 
       if (returnExpr.type === 'ObjectExpression') {
         for (const prop of returnExpr.properties) {
-          if (prop.type === 'KeyValueProperty') {
+          if (prop.type === 'ObjectProperty') {
             const indexName =
               prop.key.type === 'Identifier'
                 ? getIdentifierName(prop.key)
@@ -147,7 +148,7 @@ export const parseSchemaTableCall = (
 ): DrizzleTableDefinition | null => {
   if (!isSchemaTableCall(callExpr) || callExpr.arguments.length < 2) return null
 
-  // Extract expression from SWC argument structure
+  // Extract expression from Babel argument structure
   const tableNameExpr = getArgumentExpression(callExpr.arguments[0])
   const columnsExpr = getArgumentExpression(callExpr.arguments[1])
 
@@ -169,7 +170,7 @@ export const parseSchemaTableCall = (
 
   // Parse columns from the object expression
   for (const prop of columnsExpr.properties) {
-    if (prop.type === 'KeyValueProperty') {
+    if (prop.type === 'ObjectProperty') {
       const column = parseColumnFromProperty(prop)
       if (column) {
         // Use the JS property name as the key
@@ -191,13 +192,14 @@ export const parseSchemaTableCall = (
       let returnExpr = thirdArgExpr.body
 
       // Handle parenthesized expressions like (table) => ({ ... })
-      if (returnExpr.type === 'ParenthesisExpression') {
+      // Note: Babel uses 'ParenthesizedExpression' instead of SWC's 'ParenthesisExpression'
+      if (returnExpr.type === 'ParenthesizedExpression') {
         returnExpr = returnExpr.expression
       }
 
       if (returnExpr.type === 'ObjectExpression') {
         for (const prop of returnExpr.properties) {
-          if (prop.type === 'KeyValueProperty') {
+          if (prop.type === 'ObjectProperty') {
             const indexName =
               prop.key.type === 'Identifier'
                 ? getIdentifierName(prop.key)
@@ -232,7 +234,7 @@ const parseIndexDefinition = (
   // Handle primaryKey({ columns: [...] })
   if (
     callExpr.callee.type === 'Identifier' &&
-    callExpr.callee.value === 'primaryKey'
+    callExpr.callee.name === 'primaryKey'
   ) {
     if (callExpr.arguments.length > 0) {
       const configArg = callExpr.arguments[0]
@@ -267,7 +269,7 @@ const parseIndexDefinition = (
     currentExpr.callee.type === 'MemberExpression' &&
     currentExpr.callee.property.type === 'Identifier'
   ) {
-    const methodName = currentExpr.callee.property.value
+    const methodName = currentExpr.callee.property.name
     methodCalls.unshift({ method: methodName, expr: currentExpr })
     currentExpr = currentExpr.callee.object
   }
@@ -277,7 +279,7 @@ const parseIndexDefinition = (
     currentExpr.type === 'CallExpression' &&
     currentExpr.callee.type === 'Identifier'
   ) {
-    const baseMethod = currentExpr.callee.value
+    const baseMethod = currentExpr.callee.name
     if (baseMethod === 'index' || baseMethod === 'uniqueIndex') {
       isUnique = baseMethod === 'uniqueIndex'
       // Get the index name from the first argument
@@ -305,7 +307,7 @@ const parseIndexDefinition = (
           argExpr.object.type === 'Identifier' &&
           argExpr.property.type === 'Identifier'
         ) {
-          columns.push(argExpr.property.value)
+          columns.push(argExpr.property.name)
         }
       }
     } else if (method === 'using') {
@@ -327,7 +329,7 @@ const parseIndexDefinition = (
           argExpr.object.type === 'Identifier' &&
           argExpr.property.type === 'Identifier'
         ) {
-          columns.push(argExpr.property.value)
+          columns.push(argExpr.property.name)
         }
       }
     }

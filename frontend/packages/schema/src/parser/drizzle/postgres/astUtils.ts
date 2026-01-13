@@ -3,28 +3,47 @@
  */
 
 import type {
-  Argument,
+  ArgumentPlaceholder,
   CallExpression,
   Expression,
-  Import,
+  JSXNamespacedName,
   ObjectExpression,
-  Super,
-} from '@swc/core'
+  SpreadElement,
+  V8IntrinsicIdentifier,
+} from '@babel/types'
 import { getPropertyValue, hasProperty, isObject } from './types.js'
 
 /**
- * Type guard for SWC Argument wrapper
+ * Babel argument type (union of possible argument types)
  */
-const isArgumentWrapper = (arg: unknown): arg is { expression: Expression } => {
-  return isObject(arg) && hasProperty(arg, 'expression')
+type BabelArgument =
+  | Expression
+  | SpreadElement
+  | ArgumentPlaceholder
+  | JSXNamespacedName
+
+/**
+ * Type guard to check if argument is an Expression (not SpreadElement, ArgumentPlaceholder, or JSXNamespacedName)
+ */
+const isExpression = (arg: BabelArgument): arg is Expression => {
+  return (
+    arg.type !== 'SpreadElement' &&
+    arg.type !== 'ArgumentPlaceholder' &&
+    arg.type !== 'JSXNamespacedName'
+  )
 }
 
 /**
- * Extract expression from SWC Argument wrapper
+ * Extract expression from Babel argument (Babel doesn't wrap arguments like SWC)
  */
-export const getArgumentExpression = (arg: unknown): Expression | null => {
-  if (isArgumentWrapper(arg)) {
-    return arg.expression
+export const getArgumentExpression = (
+  arg: BabelArgument | null | undefined,
+): Expression | null => {
+  if (!arg) return null
+  // In Babel, arguments are directly expressions (not wrapped)
+  // Filter out non-expression types using type guard
+  if (isExpression(arg)) {
+    return arg
   }
   return null
 }
@@ -65,16 +84,16 @@ export const isArrayExpression = (
 }
 
 /**
- * Type guard for identifier nodes
+ * Type guard for identifier nodes (Babel uses 'name' instead of 'value')
  */
 export const isIdentifier = (
   node: unknown,
-): node is { type: 'Identifier'; value: string } => {
+): node is { type: 'Identifier'; name: string } => {
   return (
     isObject(node) &&
     getPropertyValue(node, 'type') === 'Identifier' &&
-    hasProperty(node, 'value') &&
-    typeof getPropertyValue(node, 'value') === 'string'
+    hasProperty(node, 'name') &&
+    typeof getPropertyValue(node, 'name') === 'string'
   )
 }
 
@@ -82,21 +101,21 @@ export const isIdentifier = (
  * Check if a node is an identifier with a specific name
  */
 const isIdentifierWithName = (
-  node: Expression | Super | Import,
+  node: Expression | V8IntrinsicIdentifier,
   name: string,
 ): boolean => {
-  return isIdentifier(node) && node.value === name
+  return isIdentifier(node) && node.name === name
 }
 
 /**
- * Type guard for member expressions
+ * Type guard for member expressions (Babel uses 'name' instead of 'value' for identifiers)
  */
 export const isMemberExpression = (
   node: unknown,
 ): node is {
   type: 'MemberExpression'
-  object: { type: string; value?: string }
-  property: { type: string; value?: string }
+  object: { type: string; name?: string }
+  property: { type: string; name?: string }
 } => {
   return (
     isObject(node) &&
@@ -145,7 +164,7 @@ export const isSchemaTableCall = (callExpr: CallExpression): boolean => {
   return (
     isMemberExpression(callExpr.callee) &&
     isIdentifier(callExpr.callee.property) &&
-    callExpr.callee.property.value === 'table'
+    callExpr.callee.property.name === 'table'
   )
 }
 
@@ -160,11 +179,11 @@ export const getStringValue = (node: Expression): string | null => {
 }
 
 /**
- * Extract identifier name
+ * Extract identifier name (Babel uses 'name' instead of 'value')
  */
 export const getIdentifierName = (node: Expression): string | null => {
   if (isIdentifier(node)) {
-    return node.value
+    return node.name
   }
   return null
 }
@@ -174,8 +193,8 @@ export const getIdentifierName = (node: Expression): string | null => {
  */
 export const parseMethodChain = (
   expr: Expression,
-): Array<{ name: string; args: Argument[] }> => {
-  const methods: Array<{ name: string; args: Argument[] }> = []
+): Array<{ name: string; args: BabelArgument[] }> => {
+  const methods: Array<{ name: string; args: BabelArgument[] }> = []
   let current = expr
 
   while (current.type === 'CallExpression') {
@@ -184,7 +203,7 @@ export const parseMethodChain = (
       current.callee.property.type === 'Identifier'
     ) {
       methods.unshift({
-        name: current.callee.property.value,
+        name: current.callee.property.name,
         args: current.arguments,
       })
       current = current.callee.object
