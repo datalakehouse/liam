@@ -28,6 +28,54 @@ const isSupportedFormat = (value: string): value is SupportedFormat => {
 }
 
 /**
+ * Type guard to check if a value is a non-null object
+ */
+const isNonNullObject = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === 'object' && value !== null
+}
+
+/**
+ * Detect JSON schema format by examining the content structure.
+ * TBLS format uses arrays for tables/enums, while Liam format uses objects.
+ */
+const detectJsonFormat = (str: string): 'tbls' | 'liam' | null => {
+  try {
+    const parsed: unknown = JSON.parse(str)
+    if (!isNonNullObject(parsed)) {
+      return null
+    }
+
+    // Check if 'tables' exists and determine its type
+    if ('tables' in parsed) {
+      const tables = parsed['tables']
+      // TBLS format: tables is an array
+      if (Array.isArray(tables)) {
+        return 'tbls'
+      }
+      // Liam format: tables is an object (record)
+      if (isNonNullObject(tables)) {
+        return 'liam'
+      }
+    }
+
+    // If no tables field, check for other TBLS-specific fields
+    if ('relations' in parsed || 'driver' in parsed || 'viewpoints' in parsed) {
+      return 'tbls'
+    }
+
+    // If has extensions field (Liam-specific), it's Liam format
+    if ('extensions' in parsed) {
+      return 'liam'
+    }
+
+    // Default to tbls for backwards compatibility
+    return 'tbls'
+  } catch {
+    return null
+  }
+}
+
+/**
  * Parse a schema string into a structured format.
  *
  * @param str - The schema content to parse
@@ -49,9 +97,18 @@ export const parse = async (
   formatOrPath: SupportedFormat | string,
 ): Promise<ProcessResult> => {
   // Check if formatOrPath is a valid SupportedFormat directly, otherwise try to detect from path
-  const format: SupportedFormat | undefined = isSupportedFormat(formatOrPath)
+  let format: SupportedFormat | undefined = isSupportedFormat(formatOrPath)
     ? formatOrPath
     : detectFormat(formatOrPath)
+
+  // For JSON files, we need to examine the content to distinguish between TBLS and Liam formats
+  // since both use .json extension but have different structures
+  if (format === 'tbls') {
+    const detectedJsonFormat = detectJsonFormat(str)
+    if (detectedJsonFormat) {
+      format = detectedJsonFormat
+    }
+  }
 
   if (!format) {
     return {
