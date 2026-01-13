@@ -21,6 +21,12 @@ export default defineConfig({
         '@prisma/internals',
         '@ruby/prism',
         'pg-query-emscripten',
+        // Node.js built-in modules used by @liam-hq/schema's loadPrism.ts
+        // These are server-side only and not needed in the browser build
+        'node:url',
+        'node:fs',
+        'node:fs/promises',
+        'node:wasi',
       ],
       plugins: [
         {
