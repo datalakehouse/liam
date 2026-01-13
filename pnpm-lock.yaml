@@ -236,7 +236,7 @@ importers:
         version: link:../schema
       '@storybook/nextjs':
         specifier: 9.1.15
-        version: 9.1.15(@swc/core@1.12.11)(next@15.4.8(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(@playwright/test@1.56.1)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(storybook@9.1.17(@testing-library/dom@10.4.1)(msw@2.11.6(@types/node@22.18.11)(typescript@5.9.3))(prettier@3.6.2)(vite@6.4.1(@types/node@22.18.11)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)))(type-fest@4.41.0)(typescript@5.9.3)(webpack-hot-middleware@2.26.1)(webpack@5.102.1(@swc/core@1.12.11))
+        version: 9.1.15(@swc/core@1.12.11)(esbuild@0.25.11)(next@15.4.8(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(@playwright/test@1.56.1)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(storybook@9.1.17(@testing-library/dom@10.4.1)(msw@2.11.6(@types/node@22.18.11)(typescript@5.9.3))(prettier@3.6.2)(vite@6.4.1(@types/node@22.18.11)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)))(type-fest@4.41.0)(typescript@5.9.3)(webpack-hot-middleware@2.26.1)(webpack@5.102.1(@swc/core@1.12.11)(esbuild@0.25.11))
       '@testing-library/jest-dom':
         specifier: 6.9.1
         version: 6.9.1
@@ -282,9 +282,6 @@ importers:
       '@dbml/core':
         specifier: 5.3.1
         version: 5.3.1
-      '@prisma/internals':
-        specifier: 6.8.2
-        version: 6.8.2(typescript@5.9.3)
       '@ruby/prism':
         specifier: 1.5.2
         version: 1.5.2
@@ -316,9 +313,6 @@ importers:
       '@pgsql/types':
         specifier: 15.1.1
         version: 15.1.1
-      '@prisma/generator-helper':
-        specifier: 6.8.2
-        version: 6.8.2
       '@types/node':
         specifier: 22.18.11
         version: 22.18.11
@@ -409,7 +403,7 @@ importers:
         version: link:../../internal-packages/configs
       '@storybook/nextjs':
         specifier: 9.1.15
-        version: 9.1.15(@swc/core@1.12.11)(esbuild@0.25.11)(next@15.4.8(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(@playwright/test@1.56.1)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(storybook@9.1.17(@testing-library/dom@10.4.1)(msw@2.11.6(@types/node@22.18.11)(typescript@5.9.3))(prettier@3.6.2)(vite@6.4.1(@types/node@22.18.11)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)))(type-fest@4.41.0)(typescript@5.9.3)(webpack-hot-middleware@2.26.1)(webpack@5.102.1(@swc/core@1.12.11)(esbuild@0.25.11))
+        version: 9.1.15(@swc/core@1.12.11)(next@15.4.8(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(@playwright/test@1.56.1)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(storybook@9.1.17(@testing-library/dom@10.4.1)(msw@2.11.6(@types/node@22.18.11)(typescript@5.9.3))(prettier@3.6.2)(vite@6.4.1(@types/node@22.18.11)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)))(type-fest@4.41.0)(typescript@5.9.3)(webpack-hot-middleware@2.26.1)(webpack@5.102.1(@swc/core@1.12.11))
       '@testing-library/jest-dom':
         specifier: 6.9.1
         version: 6.9.1

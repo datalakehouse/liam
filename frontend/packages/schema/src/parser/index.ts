@@ -22,10 +22,6 @@ export const parse = async (
       const { processor } = await import('./sql/index.js')
       return processor(str)
     }
-    case 'prisma': {
-      const { processor } = await import('./prisma/index.js')
-      return processor(str)
-    }
     case 'drizzle': {
       const { processor } = await import('./drizzle/index.js')
       return processor(str)

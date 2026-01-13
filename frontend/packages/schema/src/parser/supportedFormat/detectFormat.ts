@@ -6,7 +6,6 @@ import type { SupportedFormat } from './index.js'
 const nameToFormatMap: Record<string, SupportedFormat> = {
   'schema.rb': 'schemarb',
   schemafile: 'schemarb',
-  'prisma.schema': 'prisma',
   'schema.json': 'tbls',
   'schema.ts': 'drizzle',
   'db.ts': 'drizzle',
@@ -17,7 +16,6 @@ const nameToFormatMap: Record<string, SupportedFormat> = {
 const extensionToFormatMap: Record<string, SupportedFormat> = {
   rb: 'schemarb',
   sql: 'postgres',
-  prisma: 'prisma',
   ts: 'drizzle',
   js: 'drizzle',
   json: 'tbls',
