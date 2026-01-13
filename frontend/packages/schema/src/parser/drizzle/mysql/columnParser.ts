@@ -2,7 +2,8 @@
  * Column definition parsing for Drizzle ORM MySQL schema parsing
  */
 
-import type { Argument, Expression, Property } from '@swc/core'
+import type { Expression, ObjectProperty } from '@babel/types'
+import type { BabelArgument } from './astUtils.js'
 import {
   getArgumentExpression,
   getIdentifierName,
@@ -24,7 +25,7 @@ const extractInlineEnumDefinition = (
   if (
     callExpr.type !== 'CallExpression' ||
     callExpr.callee.type !== 'Identifier' ||
-    callExpr.callee.value !== 'mysqlEnum' ||
+    callExpr.callee.name !== 'mysqlEnum' ||
     callExpr.arguments.length < 2
   ) {
     return null
@@ -43,9 +44,8 @@ const extractInlineEnumDefinition = (
 
   const values: string[] = []
   for (const element of valuesExpr.elements) {
-    if (!element) continue
-    const expr = 'expression' in element ? element.expression : element
-    const str = getStringValue(expr)
+    if (!element || element.type === 'SpreadElement') continue
+    const str = getStringValue(element)
     if (typeof str === 'string') values.push(str)
   }
 
@@ -55,7 +55,7 @@ const extractInlineEnumDefinition = (
 /**
  * Parse runtime function from $defaultFn or $onUpdate arguments
  */
-const parseRuntimeFunction = (args: Argument[]): string => {
+const parseRuntimeFunction = (args: BabelArgument[]): string => {
   if (args.length === 0) {
     return 'custom_function()'
   }
@@ -67,10 +67,10 @@ const parseRuntimeFunction = (args: Argument[]): string => {
 
   const body = argExpr.body
   if (body.type === 'CallExpression' && body.callee.type === 'Identifier') {
-    return `${body.callee.value}()`
+    return `${body.callee.name}()`
   }
   if (body.type === 'NewExpression' && body.callee.type === 'Identifier') {
-    return `new ${body.callee.value}()`
+    return `new ${body.callee.name}()`
   }
 
   return 'custom_function()'
@@ -80,11 +80,11 @@ const parseRuntimeFunction = (args: Argument[]): string => {
  * Parse column definition from object property and extract any inline enum definitions
  */
 export const parseColumnFromProperty = (
-  prop: Property,
+  prop: ObjectProperty,
   extractedEnums?: Record<string, DrizzleEnumDefinition>,
   // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: TODO: Refactor to reduce complexity
 ): DrizzleColumnDefinition | null => {
-  if (prop.type !== 'KeyValueProperty') return null
+  if (prop.type !== 'ObjectProperty') return null
 
   const columnName =
     prop.key.type === 'Identifier' ? getIdentifierName(prop.key) : null
@@ -111,7 +111,7 @@ export const parseColumnFromProperty = (
     current.type === 'CallExpression' &&
     current.callee.type === 'Identifier'
   ) {
-    baseType = current.callee.value
+    baseType = current.callee.name
 
     if (baseType === 'mysqlEnum' && extractedEnums) {
       const enumDef = extractInlineEnumDefinition(current)
@@ -121,7 +121,7 @@ export const parseColumnFromProperty = (
     }
   } else if (current.type === 'Identifier') {
     // Handle enum variable references (e.g., statusEnum)
-    const enumVarName = current.value
+    const enumVarName = current.name
     const enumDef = extractedEnums?.[enumVarName]
     if (enumDef) {
       baseType = enumDef.name
@@ -213,8 +213,8 @@ export const parseColumnFromProperty = (
                 onDelete?: string
                 onUpdate?: string
               } = {
-                table: body.object.value,
-                column: body.property.value,
+                table: body.object.name,
+                column: body.property.name,
               }
 
               // Parse the second argument for onDelete/onUpdate options

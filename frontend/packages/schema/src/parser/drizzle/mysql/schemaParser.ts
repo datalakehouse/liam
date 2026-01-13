@@ -2,7 +2,7 @@
  * Schema parsing for Drizzle ORM MySQL schema parsing
  */
 
-import type { CallExpression } from '@swc/core'
+import type { CallExpression } from '@babel/types'
 import { getArgumentExpression, getStringValue } from './astUtils.js'
 import type { DrizzleSchemaDefinition } from './types.js'
 
@@ -17,7 +17,7 @@ export const parseMysqlSchemaCall = (
   const schemaNameArg = callExpr.arguments[0]
   if (!schemaNameArg) return null
 
-  // Extract expression from SWC argument structure
+  // Extract expression from Babel argument structure
   const schemaNameExpr = getArgumentExpression(schemaNameArg)
   const schemaName = schemaNameExpr ? getStringValue(schemaNameExpr) : null
 

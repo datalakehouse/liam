@@ -2,7 +2,7 @@
  * Column definition parsing for Drizzle ORM schema parsing
  */
 
-import type { Expression, Property } from '@swc/core'
+import type { Expression, ObjectProperty } from '@babel/types'
 import {
   getArgumentExpression,
   getIdentifierName,
@@ -18,10 +18,10 @@ import type { DrizzleColumnDefinition } from './types.js'
  * Parse column definition from object property
  */
 export const parseColumnFromProperty = (
-  prop: Property,
+  prop: ObjectProperty,
   // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: TODO: Refactor to reduce complexity
 ): DrizzleColumnDefinition | null => {
-  if (prop.type !== 'KeyValueProperty') return null
+  if (prop.type !== 'ObjectProperty') return null
 
   const columnName =
     prop.key.type === 'Identifier' ? getIdentifierName(prop.key) : null
@@ -48,7 +48,7 @@ export const parseColumnFromProperty = (
     current.type === 'CallExpression' &&
     current.callee.type === 'Identifier'
   ) {
-    baseType = current.callee.value
+    baseType = current.callee.name
   }
 
   if (!baseType) return null
@@ -124,8 +124,8 @@ export const parseColumnFromProperty = (
                 onDelete?: string
                 onUpdate?: string
               } = {
-                table: body.object.value,
-                column: body.property.value,
+                table: body.object.name,
+                column: body.property.name,
               }
 
               // Parse the second argument for onDelete/onUpdate options

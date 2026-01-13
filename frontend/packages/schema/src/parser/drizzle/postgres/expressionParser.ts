@@ -2,9 +2,8 @@
  * Expression parsing utilities for Drizzle ORM schema parsing
  */
 
-import type { Expression, ObjectExpression } from '@swc/core'
+import type { Expression, ObjectExpression } from '@babel/types'
 import {
-  getArgumentExpression,
   getIdentifierName,
   getStringValue,
   isArrayExpression,
@@ -14,7 +13,7 @@ import {
 import { getPropertyValue, hasProperty, isObject } from './types.js'
 
 /**
- * Parse default value from expression
+ * Parse default value from expression (Babel uses 'name' instead of 'value' for identifiers)
  */
 export const parseDefaultValue = (expr: Expression): unknown => {
   switch (expr.type) {
@@ -28,24 +27,24 @@ export const parseDefaultValue = (expr: Expression): unknown => {
       return null
     case 'Identifier':
       // Handle special cases like defaultRandom, defaultNow
-      switch (expr.value) {
+      switch (expr.name) {
         case 'defaultRandom':
           return 'defaultRandom'
         case 'defaultNow':
           return 'now()'
         default:
-          return expr.value
+          return expr.name
       }
     case 'CallExpression':
       // Handle function calls like defaultNow()
       if (expr.callee.type === 'Identifier') {
-        switch (expr.callee.value) {
+        switch (expr.callee.name) {
           case 'defaultNow':
             return 'now()'
           case 'defaultRandom':
             return 'defaultRandom'
           default:
-            return expr.callee.value
+            return expr.callee.name
         }
       }
       return undefined
@@ -55,7 +54,7 @@ export const parseDefaultValue = (expr: Expression): unknown => {
 }
 
 /**
- * Parse object expression to plain object
+ * Parse object expression to plain object (Babel uses 'ObjectProperty' instead of 'KeyValueProperty')
  */
 export const parseObjectExpression = (
   obj: ObjectExpression,
@@ -63,7 +62,7 @@ export const parseObjectExpression = (
   const result: Record<string, unknown> = {}
 
   for (const prop of obj.properties) {
-    if (prop.type === 'KeyValueProperty') {
+    if (prop.type === 'ObjectProperty') {
       const key =
         prop.key.type === 'Identifier'
           ? getIdentifierName(prop.key)
@@ -107,26 +106,25 @@ const parsePropertyValue = (expr: unknown): unknown => {
   if (isArrayExpression(expr)) {
     const result: unknown[] = []
     for (const element of expr.elements) {
-      const elementExpr = getArgumentExpression(element)
+      if (!element) continue
+      // In Babel, array elements are directly expressions (not wrapped)
+      // Filter out SpreadElement types
       if (
-        elementExpr &&
-        elementExpr.type === 'MemberExpression' &&
-        elementExpr.object.type === 'Identifier' &&
-        elementExpr.property.type === 'Identifier'
-      ) {
-        // For table.columnName references, use the property name
-        result.push(elementExpr.property.value)
-      } else if (
+        typeof element === 'object' &&
+        'type' in element &&
+        element.type === 'SpreadElement'
+      )
+        continue
+
+      if (
         isMemberExpression(element) &&
         isIdentifier(element.object) &&
         isIdentifier(element.property)
       ) {
-        // Direct MemberExpression (not wrapped in { expression })
-        result.push(element.property.value)
+        // For table.columnName references, use the property name
+        result.push(element.property.name)
       } else {
-        const parsed = elementExpr
-          ? parseDefaultValue(elementExpr)
-          : parseUnknownValue(element)
+        const parsed = parseUnknownValue(element)
         result.push(parsed)
       }
     }

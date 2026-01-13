@@ -2,8 +2,8 @@
  * Main orchestrator for Drizzle ORM MySQL schema parsing
  */
 
-import type { Module, VariableDeclarator } from '@swc/core'
-import { parseSync } from '@swc/core'
+import { parse } from '@babel/parser'
+import type { File, VariableDeclarator } from '@babel/types'
 import type { Processor, ProcessResult } from '../../types.js'
 import {
   isMysqlSchemaCall,
@@ -28,7 +28,7 @@ import type {
 } from './types.js'
 
 /**
- * Parse Drizzle TypeScript schema to extract table definitions using SWC AST
+ * Parse Drizzle TypeScript schema to extract table definitions using Babel AST
  */
 const parseDrizzleSchema = (
   sourceCode: string,
@@ -39,9 +39,9 @@ const parseDrizzleSchema = (
   variableToTableMapping: Record<string, string>
 } => {
   // Parse TypeScript code into AST
-  const ast = parseSync(sourceCode, {
-    syntax: 'typescript',
-    target: 'es2022',
+  const ast = parse(sourceCode, {
+    sourceType: 'module',
+    plugins: ['typescript'],
   })
 
   const tables: Record<string, DrizzleTableDefinition> = {}
@@ -50,22 +50,22 @@ const parseDrizzleSchema = (
   const variableToTableMapping: Record<string, string> = {}
 
   // Traverse the AST to find mysqlTable, mysqlSchema calls
-  visitModule(ast, tables, enums, schemas, variableToTableMapping)
+  visitFile(ast, tables, enums, schemas, variableToTableMapping)
 
   return { tables, enums, schemas, variableToTableMapping }
 }
 
 /**
- * Visit and traverse the module AST
+ * Visit and traverse the file AST
  */
-const visitModule = (
-  module: Module,
+const visitFile = (
+  file: File,
   tables: Record<string, DrizzleTableDefinition>,
   enums: Record<string, DrizzleEnumDefinition>,
   schemas: Record<string, DrizzleSchemaDefinition>,
   variableToTableMapping: Record<string, string>,
 ) => {
-  for (const item of module.body) {
+  for (const item of file.program.body) {
     if (item.type === 'VariableDeclaration') {
       for (const declarator of item.declarations) {
         visitVariableDeclarator(
@@ -77,7 +77,7 @@ const visitModule = (
         )
       }
     } else if (
-      item.type === 'ExportDeclaration' &&
+      item.type === 'ExportNamedDeclaration' &&
       item.declaration?.type === 'VariableDeclaration'
     ) {
       for (const declarator of item.declaration.declarations) {
@@ -113,40 +113,40 @@ const visitVariableDeclarator = (
     if (table && declarator.id.type === 'Identifier') {
       tables[table.name] = table
       // Map variable name to table name
-      variableToTableMapping[declarator.id.value] = table.name
+      variableToTableMapping[declarator.id.name] = table.name
     }
   } else if (isSchemaTableCall(callExpr)) {
     const table = parseSchemaTableCall(callExpr, enums)
     if (table && declarator.id.type === 'Identifier') {
       tables[table.name] = table
       // Map variable name to table name
-      variableToTableMapping[declarator.id.value] = table.name
+      variableToTableMapping[declarator.id.name] = table.name
     }
   } else if (
     declarator.init.type === 'CallExpression' &&
     declarator.init.callee.type === 'MemberExpression' &&
     declarator.init.callee.property.type === 'Identifier' &&
-    declarator.init.callee.property.value === '$comment'
+    declarator.init.callee.property.name === '$comment'
   ) {
     // Handle table comments: mysqlTable(...).comment(...)
     const table = parseMysqlTableWithComment(declarator.init, enums)
     if (table && declarator.id.type === 'Identifier') {
       tables[table.name] = table
       // Map variable name to table name
-      variableToTableMapping[declarator.id.value] = table.name
+      variableToTableMapping[declarator.id.name] = table.name
     }
   } else if (
     callExpr.callee.type === 'Identifier' &&
-    callExpr.callee.value === 'mysqlEnum'
+    callExpr.callee.name === 'mysqlEnum'
   ) {
     const enumDef = parseMysqlEnumCall(callExpr)
     if (enumDef && declarator.id.type === 'Identifier') {
-      enums[declarator.id.value] = enumDef
+      enums[declarator.id.name] = enumDef
     }
   } else if (isMysqlSchemaCall(callExpr)) {
     const schemaDef = parseMysqlSchemaCall(callExpr)
     if (schemaDef && declarator.id.type === 'Identifier') {
-      schemas[declarator.id.value] = schemaDef
+      schemas[declarator.id.name] = schemaDef
     }
   }
 }

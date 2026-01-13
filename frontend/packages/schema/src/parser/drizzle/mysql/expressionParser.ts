@@ -2,9 +2,8 @@
  * Expression parsing utilities for Drizzle ORM MySQL schema parsing
  */
 
-import type { Expression, ObjectExpression } from '@swc/core'
+import type { Expression, ObjectExpression } from '@babel/types'
 import {
-  getArgumentExpression,
   getIdentifierName,
   getStringValue,
   isArrayExpression,
@@ -41,11 +40,11 @@ export const parseDefaultValue = (expr: Expression): unknown => {
     case 'NullLiteral':
       return null
     case 'Identifier':
-      return parseSpecialValue(expr.value)
+      return parseSpecialValue(expr.name)
     case 'CallExpression':
       // Handle function calls like defaultNow()
       if (expr.callee.type === 'Identifier') {
-        return parseSpecialValue(expr.callee.value)
+        return parseSpecialValue(expr.callee.name)
       }
       return undefined
     default:
@@ -62,7 +61,7 @@ export const parseObjectExpression = (
   const result: Record<string, unknown> = {}
 
   for (const prop of obj.properties) {
-    if (prop.type === 'KeyValueProperty') {
+    if (prop.type === 'ObjectProperty') {
       const key =
         prop.key.type === 'Identifier'
           ? getIdentifierName(prop.key)
@@ -106,26 +105,25 @@ const parsePropertyValue = (expr: unknown): unknown => {
   if (isArrayExpression(expr)) {
     const result: unknown[] = []
     for (const element of expr.elements) {
-      const elementExpr = getArgumentExpression(element)
+      if (!element) continue
+      // In Babel, array elements are directly expressions (not wrapped)
+      // Filter out SpreadElement types
       if (
-        elementExpr &&
-        elementExpr.type === 'MemberExpression' &&
-        elementExpr.object.type === 'Identifier' &&
-        elementExpr.property.type === 'Identifier'
-      ) {
-        // For table.columnName references, use the property name
-        result.push(elementExpr.property.value)
-      } else if (
+        typeof element === 'object' &&
+        'type' in element &&
+        element.type === 'SpreadElement'
+      )
+        continue
+
+      if (
         isMemberExpression(element) &&
         isIdentifier(element.object) &&
         isIdentifier(element.property)
       ) {
-        // Direct MemberExpression (not wrapped in { expression })
-        result.push(element.property.value)
+        // For table.columnName references, use the property name
+        result.push(element.property.name)
       } else {
-        const parsed = elementExpr
-          ? parseDefaultValue(elementExpr)
-          : parseUnknownValue(element)
+        const parsed = parseUnknownValue(element)
         result.push(parsed)
       }
     }

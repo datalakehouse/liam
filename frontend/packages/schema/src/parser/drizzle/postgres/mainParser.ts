@@ -2,8 +2,8 @@
  * Main orchestrator for Drizzle ORM schema parsing
  */
 
-import type { CallExpression, Module, VariableDeclarator } from '@swc/core'
-import { parseSync } from '@swc/core'
+import { parse } from '@babel/parser'
+import type { CallExpression, File, VariableDeclarator } from '@babel/types'
 import type { Processor, ProcessResult } from '../../types.js'
 import { extractPgTableFromChain, isSchemaTableCall } from './astUtils.js'
 import {
@@ -19,7 +19,7 @@ import {
 import type { DrizzleEnumDefinition, DrizzleTableDefinition } from './types.js'
 
 /**
- * Parse Drizzle TypeScript schema to extract table definitions using SWC AST
+ * Parse Drizzle TypeScript schema to extract table definitions using Babel AST
  */
 const parseDrizzleSchema = (
   sourceCode: string,
@@ -29,9 +29,9 @@ const parseDrizzleSchema = (
   variableToTableMapping: Record<string, string>
 } => {
   // Parse TypeScript code into AST
-  const ast = parseSync(sourceCode, {
-    syntax: 'typescript',
-    target: 'es2022',
+  const ast = parse(sourceCode, {
+    sourceType: 'module',
+    plugins: ['typescript'],
   })
 
   const tables: Record<string, DrizzleTableDefinition> = {}
@@ -39,21 +39,21 @@ const parseDrizzleSchema = (
   const variableToTableMapping: Record<string, string> = {}
 
   // Traverse the AST to find pgTable calls
-  visitModule(ast, tables, enums, variableToTableMapping)
+  visitFile(ast, tables, enums, variableToTableMapping)
 
   return { tables, enums, variableToTableMapping }
 }
 
 /**
- * Visit and traverse the module AST
+ * Visit and traverse the file AST
  */
-const visitModule = (
-  module: Module,
+const visitFile = (
+  file: File,
   tables: Record<string, DrizzleTableDefinition>,
   enums: Record<string, DrizzleEnumDefinition>,
   variableToTableMapping: Record<string, string>,
 ) => {
-  for (const item of module.body) {
+  for (const item of file.program.body) {
     if (item.type === 'VariableDeclaration') {
       for (const declarator of item.declarations) {
         visitVariableDeclarator(
@@ -64,7 +64,7 @@ const visitModule = (
         )
       }
     } else if (
-      item.type === 'ExportDeclaration' &&
+      item.type === 'ExportNamedDeclaration' &&
       item.declaration?.type === 'VariableDeclaration'
     ) {
       for (const declarator of item.declaration.declarations) {
@@ -87,7 +87,7 @@ const isCommentCall = (callExpr: CallExpression): boolean => {
     callExpr.type === 'CallExpression' &&
     callExpr.callee.type === 'MemberExpression' &&
     callExpr.callee.property.type === 'Identifier' &&
-    callExpr.callee.property.value === '$comment'
+    callExpr.callee.property.name === '$comment'
   )
 }
 
@@ -96,7 +96,7 @@ const isCommentCall = (callExpr: CallExpression): boolean => {
  */
 const isPgEnumCall = (callExpr: CallExpression): boolean => {
   return (
-    callExpr.callee.type === 'Identifier' && callExpr.callee.value === 'pgEnum'
+    callExpr.callee.type === 'Identifier' && callExpr.callee.name === 'pgEnum'
   )
 }
 
@@ -113,7 +113,7 @@ const handleCommentCall = (
   const table = parsePgTableWithComment(declarator.init)
   if (table && declarator.id.type === 'Identifier') {
     tables[table.name] = table
-    variableToTableMapping[declarator.id.value] = table.name
+    variableToTableMapping[declarator.id.name] = table.name
   }
 }
 
@@ -129,7 +129,7 @@ const handleSchemaTableCall = (
   const table = parseSchemaTableCall(callExpr)
   if (table && declarator.id.type === 'Identifier') {
     tables[table.name] = table
-    variableToTableMapping[declarator.id.value] = table.name
+    variableToTableMapping[declarator.id.name] = table.name
   }
 }
 
@@ -143,7 +143,7 @@ const handlePgEnumCall = (
 ) => {
   const enumDef = parsePgEnumCall(callExpr)
   if (enumDef && declarator.id.type === 'Identifier') {
-    const variableName = declarator.id.value
+    const variableName = declarator.id.name
     // Only store by variable name to avoid conflicts between actual name and variable name
     enums[variableName] = enumDef
   }
@@ -163,7 +163,7 @@ const handlePgTableCall = (
     const table = parsePgTableCall(basePgTableCall)
     if (table && declarator.id.type === 'Identifier') {
       tables[table.name] = table
-      variableToTableMapping[declarator.id.value] = table.name
+      variableToTableMapping[declarator.id.name] = table.name
     }
   }
 }
